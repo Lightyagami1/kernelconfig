@@ -1,1 +1,2 @@
 debian https://anonscm.debian.org/cgit/kernel/linux.git/tree/debian/config
+fedora http://pkgs.fedoraproject.org/cgit/rpms/kernel.git/log/?qt=grep&q=config
