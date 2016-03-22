@@ -1,11 +1,22 @@
 #!/usr/bin/python3
 import argparse
-from urllib import request
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 
 def download(url):
     print("Downloading " + url)
-    with request.urlopen(url) as response:
+    req = Request(url)
+    try:
+        response = urlopen(req)
+    except error.HTTPError as e:
+        print('The server couldn\'t fulfill the request.')
+        print('Error code: ', e.code)
+    except URLError as e:
+        print('We failed to reach a server.')
+        print('Reason: ', e.reason)
+    else:
         return response.read()
+    pass            # error occured
 
 argparser = argparse.ArgumentParser(description="""
     Download Liquorix.""")
@@ -14,7 +25,7 @@ argparser.add_argument("arch", type=str, help="""
 argparser.add_argument("version", type=str, help="""
     Major kernel version in the form X.Y""")
 argparser.add_argument("--pae", help="""
-    Download high memory support version for i386""")
+    Download extend physical address space version for i386""")
 
 args = argparser.parse_args()
 
@@ -30,8 +41,6 @@ if args.arch == 'x86_64':
 
 if args.version:
     version = args.version
-    print(version,args.arch)
 
-
-base = "http://liquorix.net/sources/"
-configFile = download(base + version + "/config." + name)
+top_url = "http://liquorix.net/sources/"
+configFile = download(top_url + version + "/config." + name)
