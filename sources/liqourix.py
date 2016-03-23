@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import argparse
 import sys
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen        #support for proxy already there in urllib.so no worry
 from urllib.error import URLError, HTTPError
 
 
