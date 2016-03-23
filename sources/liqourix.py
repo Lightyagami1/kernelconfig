@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import argparse
 import sys
-from urllib.request import Request, urlopen        #support for proxy already there in urllib.so no worry
+from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
 
@@ -13,7 +13,6 @@ def chunk_report(bytes_so_far, chunk_size, total_size):
 
    if bytes_so_far >= total_size:
       sys.stdout.write('\n')
-
 def chunk_read(response, chunk_size=8192, report_hook=None):
    aboutPage = response.info()
    total_size = aboutPage['Content-Length']
@@ -75,6 +74,8 @@ if args.version:
 
 top_url = "http://liquorix.net/sources/"
 configFile = download(top_url + version + "/config." + name)
-
-with open('myFile', 'wb') as my_file:    #name of file will be changed
+try:
+    with open('myFile', 'wb') as my_file:    #name of file will be changed
         my_file.write(configFile)
+except:
+    print("error")
