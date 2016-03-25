@@ -11,6 +11,7 @@ def fileSaver(fileName, finalName):
     try:
         with open(finalName, 'wb') as my_file:    #name of file will be changed
             my_file.write(fileName)
+            my_file.close()
     except:
         pass    # will make a empty file, not a big deal as in the end I will delete all files and only keep the main config file which is sure to be present.
 
@@ -31,6 +32,8 @@ def download(url):
         return response.read()
     pass            # error occured, now it will have NoneType
 
+def isComment(line):
+    return line[0] == "#" or line.length() == 0 or line.startwith("\\#")
 
 argparser = argparse.ArgumentParser(description="""
     Download Debian kernel config files""")
@@ -94,14 +97,23 @@ if (args.arch in archList) & (args.flavour != None):
 
 ### now Have to merge these multiple config files in same order
 
-#secondfile = [kernelarchFile, archConfigFile, archConfigFlavourFile]
+secondfile = ["kernelarch.config", "archConfig.config", "archConfigFlavour.config"]
+BASE = open("ConfigFile.config", "r+")
+if args.arch not in kernelarchList:
+    secondfile.remove("kernelarch.config")
 
-##now comparing these with NoneType to remove non-existent files
-#for i in secondfile:
-    #if type(i) == NoneType:
-        #secondfile.remove(i)
+for i in secondfile:
+    f = open(i, "r")
+    try:
+        if len(f.read()) == 0:
+            secondfile.remove(i)
+        else:
+            addingConfigFiles(BASE, f)
+    finally:
+        f.close()
 
-#for i in secondfile:
-    ##ignore lines starting with #
-    #pass
+
+def addingConfigFiles(base, top):
+    if isComment(i):
+        pass
 #can now use functionlaty of settings.py of kernelconfig to manage these multiple files
