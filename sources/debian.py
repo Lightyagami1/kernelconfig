@@ -1,9 +1,19 @@
 #!/usr/bin/python3
+# debian uses multiple config files, in a particular order given at https://anonscm.debian.org/cgit/kernel/linux.git/tree/debian/config/README. There are many inconsistency within the subdirectories
 import argparse
 import sys
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
-from ConfigParser SafeConfigParser
+from configparser import SafeConfigParser
+
+
+def fileSaver(fileName, finalName):
+    try:
+        with open(finalName, 'wb') as my_file:    #name of file will be changed
+            my_file.write(fileName)
+    except:
+        pass    # will make a empty file, not a big deal as in the end I will delete all files and only keep the main config file which is sure to be present.
+
 
 def download(url):
     print("Downloading " + url)
@@ -19,15 +29,16 @@ def download(url):
     else:
         aboutPage = response.info()
         return response.read()
-    pass            # error occured
+    pass            # error occured, now it will have NoneType
+
 
 argparser = argparse.ArgumentParser(description="""
-    Download Debian.""")
+    Download Debian kernel config files""")
 argparser.add_argument("arch", type=str, help="""
     Architecture as given by 'uname -m'""")
 argparser.add_argument("version", type=str, help="""
-    Major kernel version in the form X.Y""")
-argparser.add_argument("--flavour", help="""
+    Major kernel version in the form X-Y""")    #example jessie-backport
+argparser.add_argument("-f", "--flavour", help="""
     Download extend physical address space version for i386""")
 
 args = argparser.parse_args()
@@ -36,42 +47,61 @@ name = ""
 archList = ["alpha", "amd64", "i386", "arm64", "armel", "armhf", "hppa", "m68k", 
             "mips", "mips64", "mips64el", "or1k", "powerpc", "powerpcspe", "ppc64", "ppc64el", "s390", "s390x", "sh4", "sparc", "sparc64", "x32"]
 if args.arch in archList:
-    if args.arch == 'i386' or args.arch == 'i686':
-        if args.flavour == pae:
-            name = "i386-pae"
-        else:
-            name = "i386"
-    
-    else if args.arch == 'x86_64':
-        name = "amd64"
-    else:
-        name = "alpha"
+    pass
 else:
-    print("non valid architecture")        #non valid arch
+    print("non valid architecture")
+    raise SystemExit
 
+if args.version != "master":
+    versionAddition = "?h="+args.version
+else:
+    versionAddition = ""
 
 # this is base config file
-mainConfigFileURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/config"
-mainConfigFile = download(mainConfigFileURL)
+mainConfigFileURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/config"+versionAddition
+mainConfigFile = download(mainConfigFileURL)  ##remember to uncomment this
+fileSaver(mainConfigFile, "ConfigFile.config")
 
 kernelarchList = ["arm", "mips", "powerpc", "s390", "sparc", "x86"]     #this will work
 if args.arch in kernelarchList:
-    kernelarchURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/kernelarch-"+args.arch+"/config"
+    kernelarchURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/kernelarch-"+args.arch+"/config"+versionAddition
     kernelarchFile = download(kernelarchURL)
+    fileSaver(kernelarchFile, "kernelarch.config")
 
 # now for %arch/config
 if args.arch in archList:
-    archConfigURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/"+args.arch+"/config"
+    archConfigURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/"+args.arch+"/config"+versionAddition
     archConfigFile = download(archConfigURL)
+    fileSaver(archConfigFile, "archConfig.config")
 
-# for %arch/config.%flavour
-# now for %arch/config
-if args.arch in archList:
-    archConfigFlavourURL = "https://anonscm.debian.org/cgit/kernel/linux.git/tree/debian/config/"+args.arch+"/config."+args.flavour
+# for %arch/config.%flavour and for %arch/config
+if (args.arch in archList) & (args.flavour != None):
+    if args.arch == "i386":
+        if args.flavour == "pae":
+            args.flavour = "686-pae"
+        else:
+            args.flavour = "686"
+    archConfigFlavourURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/"+args.arch+"/config."+args.flavour+versionAddition
     archConfigFlavourFile = download(archConfigFlavourURL)
+    fileSaver(archConfigFlavourFile, "archConfigFlavour.config")
 
-#featureset-%featureset/config
-featuresetURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/featureset-rt/config"
-featuresetFile = download(featuresetURL)
+#featureset-%featureset/config  #not sure what they do so leave them right now
+#if args.featureset:
+    #featuresetURL = "https://anonscm.debian.org/cgit/kernel/linux.git/plain/debian/config/featureset-rt/config"+versionAddition
+    #featuresetFile = download(featuresetURL)
 
-# %arch/featureset/config and %arch/featureset/config.%flavour are not present so can be left for now
+# %arch/featureset/config and %arch/featureset/config.%flavour are left for now
+
+### now Have to merge these multiple config files in same order
+
+#secondfile = [kernelarchFile, archConfigFile, archConfigFlavourFile]
+
+##now comparing these with NoneType to remove non-existent files
+#for i in secondfile:
+    #if type(i) == NoneType:
+        #secondfile.remove(i)
+
+#for i in secondfile:
+    ##ignore lines starting with #
+    #pass
+#can now use functionlaty of settings.py of kernelconfig to manage these multiple files
