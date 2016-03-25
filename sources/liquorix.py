@@ -79,5 +79,6 @@ configFile = download(top_url + version + "/config." + name)
 try:
     with open('myFile', 'wb') as my_file:    #name of file will be changed
         my_file.write(configFile)
+    my_file.close()
 except:
     pass
